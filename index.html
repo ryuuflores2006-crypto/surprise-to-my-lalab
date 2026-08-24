@@ -14,7 +14,7 @@
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
             font-family: 'Poppins', sans-serif;
             margin: 0;
-            overflow: hidden;
+            overflow: hidden; /* Para hindi magka-scrollbar kapag tumakbo ang button sa gilid */
             position: relative;
         }
 
@@ -46,7 +46,7 @@
             line-height: 1.8;
             font-size: 16px;
             min-height: 150px;
-            display: none; /* Hidden hanggang ma-click yung Yes */
+            display: none; 
         }
 
         .btn-container {
@@ -64,13 +64,13 @@
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
         }
 
         #btnYes {
             background: linear-gradient(45deg, #ff4d6d, #ff758c);
             color: white;
             box-shadow: 0 8px 15px rgba(255, 77, 109, 0.3);
+            transition: transform 0.2s ease;
         }
         
         #btnYes:hover { transform: scale(1.05); }
@@ -79,10 +79,12 @@
             background: white;
             color: #ff4d6d;
             border: 2px solid #ff4d6d;
-            position: relative; /* Kailangan ito para tumakbo yung button */
+            /* Added transition para smooth ang pagtakbo niya */
+            transition: top 0.2s ease, left 0.2s ease;
+            z-index: 999; /* Para laging nasa ibabaw ng lahat kapag tumatakbo */
         }
 
-        /* Floating Hearts */
+        /* Floating Hearts Animation */
         .heart {
             position: absolute;
             color: #ff4d6d;
@@ -94,19 +96,6 @@
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
             100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
-        }
-
-        /* Click Burst Hearts */
-        .burst-heart {
-            position: absolute;
-            font-size: 15px;
-            pointer-events: none;
-            animation: burst 0.8s ease-out forwards;
-        }
-
-        @keyframes burst {
-            0% { transform: scale(1) translate(0, 0); opacity: 1; }
-            100% { transform: scale(1.5) translate(var(--tx), var(--ty)); opacity: 0; }
         }
     </style>
 </head>
@@ -125,18 +114,36 @@
     </div>
 
     <script>
-        // 1. Interactive 'No' Button (Tatakbo palayo sa mouse)
+        // 1. Runaway 'No' Button Logic (Malikot Effect)
         const btnNo = document.getElementById('btnNo');
         
-        btnNo.addEventListener('mouseover', () => {
-            // Kinukuha yung size ng screen para di lumabas yung button
-            const i = Math.floor(Math.random() * (window.innerWidth - 100));
-            const j = Math.floor(Math.random() * (window.innerHeight - 50));
+        // Tumakbo kapag tinapatan ng mouse o kapag tinap sa phone!
+        btnNo.addEventListener('mouseover', runaway);
+        btnNo.addEventListener('touchstart', runaway);
+
+        function runaway(e) {
+            // Kunin yung lapad at taas ng screen
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
             
+            // Kunin yung size ng button para hindi lumabas ng screen
+            const btnWidth = btnNo.offsetWidth;
+            const btnHeight = btnNo.offsetHeight;
+
+            // Mag-generate ng random na location
+            const randomX = Math.floor(Math.random() * (windowWidth - btnWidth));
+            const randomY = Math.floor(Math.random() * (windowHeight - btnHeight));
+
+            // Ilipat yung button doon sa random location
             btnNo.style.position = 'fixed';
-            btnNo.style.left = i + 'px';
-            btnNo.style.top = j + 'px';
-        });
+            btnNo.style.left = randomX + 'px';
+            btnNo.style.top = randomY + 'px';
+            
+            // Kung sa cellphone, iwasan ma-click accidentally bago tumakbo
+            if(e.type === 'touchstart') {
+                e.preventDefault(); 
+            }
+        }
 
         // 2. Interactive 'Yes' Button (Trigger ng Surprise)
         const btnYes = document.getElementById('btnYes');
@@ -149,7 +156,8 @@
 
         btnYes.addEventListener('click', () => {
             // Itago yung mga buttons at tanong
-            btnGroup.style.display = 'none';
+            btnYes.style.display = 'none';
+            btnNo.style.display = 'none';
             questionText.style.display = 'none';
             
             // Ipakita yung message space
@@ -178,30 +186,6 @@
                 
                 setTimeout(() => heart.remove(), 5000); // Burahin para iwas lag
             }, 300);
-        });
-
-        // 3. Interactive Background (Click Burst Effect)
-        document.addEventListener('click', (e) => {
-            // Gumawa ng 5 puso tuwing mag-ki-click sa screen
-            for(let i = 0; i < 5; i++) {
-                const heart = document.createElement("div");
-                heart.classList.add("burst-heart");
-                heart.innerHTML = i % 2 === 0 ? "💖" : "✨"; // Salit-salitang heart at sparkles
-                heart.style.left = e.clientX + 'px';
-                heart.style.top = e.clientY + 'px';
-                
-                // Random directions na pagsabog
-                const angle = Math.random() * Math.PI * 2;
-                const velocity = 30 + Math.random() * 40;
-                const tx = Math.cos(angle) * velocity + 'px';
-                const ty = Math.sin(angle) * velocity + 'px';
-                
-                heart.style.setProperty('--tx', tx);
-                heart.style.setProperty('--ty', ty);
-                
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 800);
-            }
         });
     </script>
 </body>
